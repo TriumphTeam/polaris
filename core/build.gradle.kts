@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-
+    api(libs.serialization.core)
 }

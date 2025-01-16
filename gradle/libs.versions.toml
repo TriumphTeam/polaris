@@ -4,12 +4,16 @@ kotlin = "2.1.0"
 serialization = "1.8.0"
 
 # Core
+yaml = "2.3"
+hocon = "1.4.3-triumph"
 
 [libraries]
 # Kotlin
-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 
 # Core
+yaml = { module = "org.yaml:snakeyaml", version.ref = "yaml" }
+hocon = { module = "dev.triumphteam:lightbend-config", version.ref = "hocon" }
 
 # build
 build-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
