@@ -1,0 +1,22 @@
+[versions]
+# kotlin
+kotlin = "2.1.0"
+serialization = "1.8.0"
+
+# Core
+
+[libraries]
+# Kotlin
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+# Core
+
+# build
+build-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+build-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
+
+[bundles]
+build = [
+    "build-kotlin",
+    "build-serialization",
+]
