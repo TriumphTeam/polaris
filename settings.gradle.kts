@@ -25,4 +25,7 @@ listOf(
 
     "hocon" to "hocon",
     "yaml" to "yaml",
+
+    "serialization/hocon" to "serialization-hocon",
+    "serialization/yaml" to "serialization-yaml",
 ).forEach(::includeProject)

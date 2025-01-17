@@ -5,7 +5,7 @@ serialization = "1.8.0"
 
 # Core
 yaml = "2.3"
-hocon = "1.4.3-triumph"
+hocon = "1.4.3-triumph-SNAPSHOT"
 
 [libraries]
 # Kotlin
