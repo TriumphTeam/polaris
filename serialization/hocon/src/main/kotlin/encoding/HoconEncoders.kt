@@ -3,17 +3,15 @@ package dev.triumphteam.polaris.hocon.encoding
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueFactory
 import com.typesafe.config.ConfigValueType
-import dev.triumphteam.polaris.annotation.SerialComment
 import dev.triumphteam.polaris.hocon.Hocon
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.descriptors.PolymorphicKind
+import dev.triumphteam.polaris.serialization.encoding.AbstractPolarisEncoder
+import dev.triumphteam.polaris.serialization.encoding.invalidKeyKindException
+import dev.triumphteam.polaris.serialization.encoding.listLike
+import dev.triumphteam.polaris.serialization.encoding.objLike
+import dev.triumphteam.polaris.serialization.encoding.polarisKind
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeEncoder
-import kotlinx.serialization.findPolymorphicSerializer
-import kotlinx.serialization.internal.AbstractPolymorphicSerializer
 import kotlinx.serialization.internal.NamedValueEncoder
 import kotlinx.serialization.internal.TaggedEncoder
 import kotlinx.serialization.modules.SerializersModule
@@ -29,29 +27,15 @@ private const val CLASS_DISCRIMINATOR_TAG = "type"
  */
 internal abstract class AbstractHoconEncoder(
     private val hocon: Hocon,
-    private val valueConsumer: (ConfigValue) -> Unit,
-) : TaggedEncoder<ConfigTag>() {
+    valueConsumer: (ConfigValue) -> Unit,
+) : AbstractPolarisEncoder<ConfigValue, ConfigTag>(valueConsumer) {
 
     override val serializersModule: SerializersModule
         get() = hocon.serializersModule
 
-    private var writeDiscriminator: Boolean = false
-
-    /** Controls what values are passed to the tag. */
-    override fun SerialDescriptor.getTag(index: Int): ConfigTag {
-
-        // Grab the comments of the descriptor.
-        val comments = getElementAnnotations(index).filterIsInstance<SerialComment>()
-            .firstOrNull()
-            ?.value ?: emptyArray()
-
-        return ConfigTag(elementName(this, index), comments.toList())
+    override fun createTag(name: String, comments: List<String>): ConfigTag {
+        return ConfigTag(name, comments)
     }
-
-    protected open fun elementName(descriptor: SerialDescriptor, index: Int): String = descriptor.getElementName(index)
-
-    protected abstract fun encodeTaggedConfigValue(tag: ConfigTag, value: ConfigValue)
-    protected abstract fun getCurrent(): ConfigValue
 
     override fun encodeTaggedValue(tag: ConfigTag, value: Any) =
         encodeTaggedConfigValue(tag, configValueOf(value, tag.comments))
@@ -60,36 +44,17 @@ internal abstract class AbstractHoconEncoder(
         if (!hocon.explicitNulls) return
         encodeTaggedConfigValue(tag, configValueOf(null, tag.comments))
     }
+
     override fun encodeTaggedChar(tag: ConfigTag, value: Char) = encodeTaggedString(tag, value.toString())
 
-    override fun encodeTaggedEnum(tag: ConfigTag, enumDescriptor: SerialDescriptor, ordinal: Int) {
-        encodeTaggedString(tag, enumDescriptor.getElementName(ordinal))
-    }
-
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int): Boolean = hocon.encodeDefaults
-
-    override fun <T> encodeSerializableValue(serializer: SerializationStrategy<T>, value: T) {
-        when {
-            serializer !is AbstractPolymorphicSerializer<*> -> serializer.serialize(this, value)
-
-            else -> {
-                @Suppress("UNCHECKED_CAST")
-                val casted = serializer as AbstractPolymorphicSerializer<Any>
-                val actualSerializer = casted.findPolymorphicSerializer(this, value as Any)
-                writeDiscriminator = true
-
-                actualSerializer.serialize(this, value)
-            }
-        }
-    }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeEncoder {
         val consumer = if (currentTagOrNull == null) {
             valueConsumer
         } else { value -> encodeTaggedConfigValue(currentTag, value) }
 
-        val kind = descriptor.hoconKind
-
+        val kind = descriptor.polarisKind
         val comments = currentTagOrNull?.comments ?: emptyList()
 
         return when {
@@ -103,10 +68,6 @@ internal abstract class AbstractHoconEncoder(
                 writeDiscriminator = false
             }
         }
-    }
-
-    override fun endEncode(descriptor: SerialDescriptor) {
-        valueConsumer(getCurrent())
     }
 
     private fun configValueOf(value: Any?, comment: List<String>) =
@@ -155,7 +116,10 @@ internal class HoconConfigMapEncoder(hocon: Hocon, configConsumer: (ConfigValue)
     override fun encodeTaggedConfigValue(tag: ConfigTag, value: ConfigValue) {
         if (isKey) {
             key = when (value.valueType()) {
-                ConfigValueType.OBJECT, ConfigValueType.LIST -> throw invalidKeyKindException(value)
+                ConfigValueType.OBJECT, ConfigValueType.LIST -> throw invalidKeyKindException(
+                    value.valueType().toString(), "Hocon"
+                )
+
                 else -> value.unwrappedNullable().toString()
             }
             isKey = false
@@ -175,17 +139,3 @@ internal class HoconConfigMapEncoder(hocon: Hocon, configConsumer: (ConfigValue)
 }
 
 internal data class ConfigTag(val name: String, val comments: List<String> = emptyList())
-
-private val SerialDescriptor.hoconKind: SerialKind
-    get() = if (kind is PolymorphicKind) StructureKind.MAP else kind
-
-private val SerialKind.listLike
-    get() = this == StructureKind.LIST || this is PolymorphicKind
-
-private val SerialKind.objLike
-    get() = this == StructureKind.CLASS || this == StructureKind.OBJECT
-
-internal fun invalidKeyKindException(value: ConfigValue) = SerializationException(
-    "Value of type '${value.valueType()}' can't be used in HOCON as a key in the map. " +
-            "It should have either primitive or enum kind."
-)

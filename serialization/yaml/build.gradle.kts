@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(projects.polarisCore)
+    api(projects.polarisSerializationCommon)
+
     implementation(libs.yaml)
 }

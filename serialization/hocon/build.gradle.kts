@@ -3,8 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(projects.polarisCore)
-    implementation(libs.hocon)
+    api(projects.polarisSerializationCommon)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation(libs.hocon)
 }

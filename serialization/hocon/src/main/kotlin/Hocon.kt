@@ -4,23 +4,18 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValue
-import dev.triumphteam.polaris.annotation.SerialComment
 import dev.triumphteam.polaris.hocon.HoconSettings.CommentStyle
 import dev.triumphteam.polaris.hocon.encoding.HoconConfigEncoder
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
-/** Creates an instance of [Hocon] configured by the builderAction [HoconBuilder]. */
-public fun Hocon(block: HoconBuilder.() -> Unit): Hocon {
-    return Hocon.Custom(HoconBuilder().apply(block))
+/** Creates an instance of [Hocon] configured by the [builderAction] [HoconBuilder]. */
+public fun Hocon(builderAction: HoconBuilder.() -> Unit): Hocon {
+    return Hocon.Custom(HoconBuilder().apply(builderAction))
 }
 
 /**
@@ -85,7 +80,7 @@ public sealed class Hocon(settings: HoconSettings) : StringFormat, HoconSettings
     }
 }
 
-/** Base settings that are used by the [Hocon] parser. */
+/** Base settings that are used by the [Hocon] serializers. */
 public interface HoconSettings {
 
     /** The kotlinx.serialization [SerializersModule] to be used. */
@@ -131,7 +126,7 @@ public class HoconBuilder internal constructor() : HoconSettings {
     override var encodeDefaults: Boolean = true
 
     /**
-     * Specifies whether `null` values should be encoded for nullable properties and must be present in JSON object
+     * Specifies whether `null` values should be encoded for nullable properties and must be present in ConfigValue
      * during decoding.
      *
      * When this flag is disabled properties with `null` values are not encoded;
