@@ -1,6 +1,5 @@
 package dev.triumphteam.polaris.hocon
 
-import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValue
@@ -42,23 +41,6 @@ public sealed class Hocon(settings: HoconSettings) : StringFormat, HoconSettings
      * @throws IllegalArgumentException if the encoded input does not comply format's specification
      */
     override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
-        return encodeToConfig(serializer, value).root().render(
-            ConfigRenderOptions.defaults()
-                .setJson(false)
-                .setFormatted(prettyPrint)
-                .setOriginComments(false)
-                .setCommentPrefix(commentStyle.prefix)
-        )
-    }
-
-    /**
-     * Serializes and encodes the given [value] to [Config] using the given [serializer].
-     * This serialization returns the raw [Config] and render maybe different from the [HoconSettings].
-     *
-     * @throws SerializationException in case of any encoding-specific error
-     * @throws IllegalArgumentException if the encoded input does not comply format's specification
-     */
-    public fun <T> encodeToConfig(serializer: SerializationStrategy<T>, value: T): Config {
         lateinit var configValue: ConfigValue
 
         // Encode value into [ConfigValue].
@@ -72,7 +54,13 @@ public sealed class Hocon(settings: HoconSettings) : StringFormat, HoconSettings
             )
         }
 
-        return (configValue as ConfigObject).toConfig()
+        return (configValue as ConfigObject).toConfig().root().render(
+            ConfigRenderOptions.defaults()
+                .setJson(false)
+                .setFormatted(prettyPrint)
+                .setOriginComments(false)
+                .setCommentPrefix(commentStyle.prefix)
+        )
     }
 
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
