@@ -1,16 +1,23 @@
 package dev.triumphteam.polaris.hocon
 
+import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValue
+import dev.triumphteam.polaris.PolarisFormat
 import dev.triumphteam.polaris.hocon.HoconSettings.CommentStyle
 import dev.triumphteam.polaris.hocon.encoding.HoconConfigEncoder
+import dev.triumphteam.polaris.hocon.encoding.HoconDecoder
+import dev.triumphteam.polaris.loadConfig
+import kotlinx.coroutines.delay
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.StringFormat
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlin.io.path.Path
+import kotlin.time.Duration.Companion.seconds
 
 /** Creates an instance of [Hocon] configured by the [builderAction] [HoconBuilder]. */
 public fun Hocon(builderAction: HoconBuilder.() -> Unit): Hocon {
@@ -21,7 +28,7 @@ public fun Hocon(builderAction: HoconBuilder.() -> Unit): Hocon {
  * Allows serialization/deserialization from Hocon into Kotlin objects and vice versa.
  * This instance in itself is [HoconSettings] with immutable values.
  */
-public sealed class Hocon(settings: HoconSettings) : StringFormat, HoconSettings by settings {
+public sealed class Hocon(settings: HoconSettings) : PolarisFormat, HoconSettings by settings {
 
     /** The default instance for the Hocon format. */
     public companion object Default : Hocon(HoconBuilder())
@@ -64,7 +71,7 @@ public sealed class Hocon(settings: HoconSettings) : StringFormat, HoconSettings
     }
 
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
-        TODO("Not yet implemented")
+        return HoconDecoder(this, ConfigFactory.parseString(string)).decodeSerializableValue(deserializer)
     }
 }
 
@@ -130,3 +137,39 @@ public class HoconBuilder internal constructor() : HoconSettings {
      */
     override var prettyPrint: Boolean = true
 }
+
+public suspend fun main() {
+
+    val config = loadConfig<MyConfig> {
+
+        file = Path("hocon-config.conf")
+
+        // Tells the config which format to use, hocon, yaml, etc
+        format = Hocon {
+            encodeDefaults = true
+            commentStyle = CommentStyle.DOUBLE_SLASH
+        }
+
+        // Only writes if the file doesn't exist.
+        // Maybe in the future some sort of migration to update the file.
+        writeDefault { MyConfig("Bob") }
+    }
+
+    // Delegate value to a variable.
+    val myConfig by config
+
+    // Print the [MyConfig].
+    println(myConfig)
+
+    // Delay for 5 seconds to give me time to edit.
+    delay(5.seconds)
+
+    // Reload config object.
+    config.reload()
+
+    // Print [MyConfig] again, notice we did not delegate it again.
+    println(myConfig)
+}
+
+@Serializable
+public data class MyConfig(public val name: String)

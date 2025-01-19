@@ -1,10 +1,10 @@
 package dev.triumphteam.polaris.yaml
 
+import dev.triumphteam.polaris.PolarisFormat
 import dev.triumphteam.polaris.yaml.encoding.YamlConfigEncoder
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.StringFormat
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import org.snakeyaml.engine.v2.api.DumpSettings
@@ -26,7 +26,7 @@ public fun Yaml(builderAction: YamlBuilder.() -> Unit): Yaml {
  * Allows serialization/deserialization from Yaml into Kotlin objects and vice versa.
  * This instance in itself is [YamlSettings] with immutable values.
  */
-public sealed class Yaml(settings: YamlSettings) : StringFormat, YamlSettings by settings {
+public sealed class Yaml(settings: YamlSettings) : PolarisFormat, YamlSettings by settings {
 
     /** The default instance for the Hocon format. */
     public companion object Default : Yaml(YamlBuilder())

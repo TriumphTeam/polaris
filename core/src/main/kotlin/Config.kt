@@ -1,8 +1,9 @@
 package dev.triumphteam.polaris
 
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import java.nio.file.Path
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 public interface Config<T> {
@@ -18,57 +19,22 @@ public interface Config<T> {
     public operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T)
 }
 
-public interface ConfigFormat
-
-public class ConfigBuilder<T : Any>(private val type: KClass<out T>) {
+public class ConfigBuilder<T : Any> {
 
     public lateinit var file: Path
-
-    public lateinit var format: ConfigFormat
+    public lateinit var format: PolarisFormat
+    public lateinit var defaults: () -> T
 
     public fun writeDefault(block: () -> T) {
-
+        this.defaults = block
     }
 
-    public fun onFailure(action: (Throwable) -> String) {
-
+    @PublishedApi
+    internal fun build(serializer: (SerializersModule) -> KSerializer<T>): Config<T> {
+        return SimpleConfig(file, serializer(format.serializersModule), format, defaults)
     }
 }
 
 public inline fun <reified T : Any> loadConfig(block: ConfigBuilder<T>.() -> Unit): Config<T> {
-
-    return TODO("Not yet implemented")
+    return ConfigBuilder<T>().apply(block).build { it.serializer<T>() }
 }
-
-@Suppress("UNREACHABLE_CODE")
-
-public fun main() {
-
-    val config = loadConfig<MyConfig> {
-
-        file = Path.of("my-config.conf")
-
-        // Tells the config which format to use, hocon, yaml, etc
-        format = TODO("Not yet implemented")
-
-        // Only writes if the file doesn't exist.
-        // Maybe in the future some sort of migration to update the file.
-        writeDefault { MyConfig("Bob") }
-
-        onFailure {
-            "This is to customize your error messages, not sure if it'll stay :')"
-        }
-    }
-
-    // Get the actual serializable class from the config object.
-    val myConfig by config
-
-    println(myConfig.name)
-
-    // Extra functionality.
-    config.reload()
-    config.save()
-}
-
-@Serializable
-public data class MyConfig(public val name: String)

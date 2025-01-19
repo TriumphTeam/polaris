@@ -4,5 +4,6 @@ plugins {
 
 dependencies {
     api(projects.polarisCore)
+
     implementation(libs.yaml)
 }
