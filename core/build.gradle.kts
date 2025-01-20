@@ -1,5 +1,6 @@
 plugins {
     id("polaris.base")
+    id("polaris.library")
 }
 
 dependencies {
