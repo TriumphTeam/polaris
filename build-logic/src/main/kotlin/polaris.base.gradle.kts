@@ -21,6 +21,12 @@ dependencies {
     api(kotlin("stdlib"))
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    withSourcesJar()
+    withJavadocJar()
+}
+
 root {
 
     configureKotlin {

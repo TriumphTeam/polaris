@@ -38,3 +38,7 @@ public class ConfigBuilder<T : Any> {
 public inline fun <reified T : Any> loadConfig(block: ConfigBuilder<T>.() -> Unit): Config<T> {
     return ConfigBuilder<T>().apply(block).build { it.serializer<T>() }
 }
+
+public inline fun <reified T : Any> loadConfigDirect(block: ConfigBuilder<T>.() -> Unit): T {
+    return loadConfig<T>(block).get()
+}
