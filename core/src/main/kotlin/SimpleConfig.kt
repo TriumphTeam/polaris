@@ -5,6 +5,7 @@ import java.nio.file.Path
 import kotlin.io.path.notExists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+import kotlin.io.path.createDirectories
 import kotlin.reflect.KProperty
 
 internal class SimpleConfig<T> internal constructor(
@@ -39,6 +40,7 @@ internal class SimpleConfig<T> internal constructor(
     private fun loadConfig(): T {
         // Write defaults if the file doesn't exist.
         if (path.notExists()) {
+            path.parent.createDirectories()
             val defaultValue = defaults()
             path.writeText(parser.encodeToString(serializer, defaultValue))
             // Return default, we don't need to read again since it'll be the same.
