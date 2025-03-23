@@ -2,10 +2,10 @@ package dev.triumphteam.polaris
 
 import kotlinx.serialization.KSerializer
 import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.notExists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
-import kotlin.io.path.createParentDirectories
 import kotlin.reflect.KProperty
 
 internal class SimpleConfig<T> internal constructor(
@@ -17,8 +17,8 @@ internal class SimpleConfig<T> internal constructor(
 
     private var value = loadConfig()
 
-    override fun save() {
-        // TODO("Not yet implemented")
+    override fun save(transform: (T) -> T) {
+        writeToPath(transform(value))
     }
 
     override fun reload() {
@@ -40,14 +40,18 @@ internal class SimpleConfig<T> internal constructor(
     private fun loadConfig(): T {
         // Write defaults if the file doesn't exist.
         if (path.notExists()) {
-            path.createParentDirectories()
-            val defaultValue = defaults()
-            path.writeText(parser.encodeToString(serializer, defaultValue))
-            // Return default, we don't need to read again since it'll be the same.
-            return defaultValue
+            return writeToPath(defaults())
         }
 
         // If it exists we just read it.
         return parser.decodeFromString(serializer, path.readText())
+    }
+
+    private fun writeToPath(value: T): T {
+        if (path.notExists()) {
+            path.createParentDirectories()
+        }
+
+        return value.also { path.writeText(parser.encodeToString(serializer, it)) }
     }
 }

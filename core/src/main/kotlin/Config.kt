@@ -8,7 +8,7 @@ import kotlin.reflect.KProperty
 
 public interface Config<T> {
 
-    public fun save()
+    public fun save(transform: (T) -> T = { it })
 
     public fun reload()
 
