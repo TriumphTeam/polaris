@@ -6,10 +6,10 @@ import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueFactory
-import dev.triumphteam.polaris.hocon.Hocon
 import dev.triumphteam.polaris.encoding.listLike
 import dev.triumphteam.polaris.encoding.objLike
 import dev.triumphteam.polaris.encoding.polarisKind
+import dev.triumphteam.polaris.hocon.Hocon
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PolymorphicKind

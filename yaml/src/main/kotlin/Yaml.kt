@@ -1,16 +1,13 @@
 package dev.triumphteam.polaris.yaml
 
 import dev.triumphteam.polaris.PolarisFormat
-import dev.triumphteam.polaris.loadConfig
-import dev.triumphteam.polaris.yaml.encoding.YamlDecoders
 import dev.triumphteam.polaris.yaml.encoding.YamlConfigEncoder
+import dev.triumphteam.polaris.yaml.encoding.YamlDecoder
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.coroutines.delay
 import org.snakeyaml.engine.v2.api.DumpSettings
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.StreamDataWriter
@@ -25,8 +22,6 @@ import org.snakeyaml.engine.v2.scanner.StreamReader
 import org.snakeyaml.engine.v2.serializer.Serializer
 import java.io.StringReader
 import java.io.StringWriter
-import kotlin.io.path.Path
-import kotlin.time.Duration.Companion.seconds
 
 /** Creates an instance of [Yaml] configured by the [builderAction] [YamlBuilder]. */
 public fun Yaml(builderAction: YamlBuilder.() -> Unit): Yaml {
@@ -82,11 +77,11 @@ public sealed class Yaml(settings: YamlSettings) : PolarisFormat, YamlSettings b
         val parser = ParserImpl(settings, reader)
         val composer = Composer(settings, parser)
 
-        val node = composer.getSingleNode().orElseThrow {
-            IllegalStateException("No YAML document found")
+        val node = composer.singleNode.orElseThrow {
+            IllegalStateException("Could not parse the input as a Yaml document.")
         }
 
-        return YamlDecoders(this, node).decodeSerializableValue(deserializer)
+        return YamlDecoder(this, node).decodeSerializableValue(deserializer)
     }
 
     private class YamlWriter : StringWriter(), StreamDataWriter {
@@ -117,7 +112,7 @@ public interface YamlSettings {
     public val explicitNulls: Boolean
 
     /**
-     * How long the indentation should be. */
+     * How big the indentation should be. */
     public val indentationSize: Int
 }
 
@@ -153,36 +148,3 @@ public class YamlBuilder internal constructor() : YamlSettings {
      */
     override var indentationSize: Int = 4
 }
-
-// Copy pasted from Hocon.kt example
-public suspend fun main() {
-
-    val config = loadConfig<MyConfig> {
-
-        file = Path("test.yaml")
-
-        // Tells the config which format to use, hocon, yaml, etc
-        format = Yaml {
-            encodeDefaults = true
-        }
-
-        // Only writes if the file doesn't exist.
-        // Maybe in the future some sort of migration to update the file.
-        writeDefault { MyConfig("Bob") }
-    }
-
-    // Delegate value to a variable.
-    val myConfig by config
-
-    // Print the [MyConfig].
-    println(myConfig)
-
-    // Reload config object.
-    config.reload()
-
-    // Print [MyConfig] again, notice we did not delegate it again.
-    println(myConfig)
-}
-
-@Serializable
-public data class MyConfig(public val name: String)

@@ -6,12 +6,12 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.modules.SerializersModule
-import org.snakeyaml.engine.v2.nodes.*
+import org.snakeyaml.engine.v2.nodes.MappingNode
+import org.snakeyaml.engine.v2.nodes.Node
+import org.snakeyaml.engine.v2.nodes.ScalarNode
+import org.snakeyaml.engine.v2.nodes.SequenceNode
 
-internal class YamlDecoders(
-    private val yaml: Yaml,
-    private val node: Node
-) : AbstractDecoder() {
+internal class YamlDecoder(private val yaml: Yaml, private val node: Node) : AbstractDecoder() {
 
     override val serializersModule: SerializersModule = yaml.serializersModule
 
@@ -50,10 +50,7 @@ internal class YamlDecoders(
     override fun decodeNull(): Nothing? = null
 }
 
-internal class YamlMapDecoder(
-    private val yaml: Yaml,
-    private val node: MappingNode
-) : AbstractDecoder() {
+internal class YamlMapDecoder(private val yaml: Yaml, node: MappingNode) : AbstractDecoder() {
 
     private var currentIndex = 0
     private val keys = node.value.map { (it.keyNode as ScalarNode).value }
@@ -84,7 +81,7 @@ internal class YamlMapDecoder(
     ): T {
         val key = descriptor.getElementName(index)
         val valueNode = values[key] ?: throw IllegalStateException("Missing key: $key")
-        return deserializer.deserialize(YamlDecoders(yaml, valueNode))
+        return deserializer.deserialize(YamlDecoder(yaml, valueNode))
     }
 }
 
@@ -111,6 +108,6 @@ internal class YamlListDecoder(
         deserializer: DeserializationStrategy<T>,
         previousValue: T?
     ): T {
-        return deserializer.deserialize(YamlDecoders(yaml, elements[index]))
+        return deserializer.deserialize(YamlDecoder(yaml, elements[index]))
     }
 }

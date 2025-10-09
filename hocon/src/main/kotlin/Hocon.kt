@@ -8,17 +8,11 @@ import dev.triumphteam.polaris.PolarisFormat
 import dev.triumphteam.polaris.hocon.HoconSettings.CommentStyle
 import dev.triumphteam.polaris.hocon.encoding.HoconConfigEncoder
 import dev.triumphteam.polaris.hocon.encoding.HoconDecoder
-import dev.triumphteam.polaris.loadConfig
-import kotlinx.coroutines.delay
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
-import kotlin.io.path.Path
-import kotlin.time.Duration.Companion.seconds
 
 /** Creates an instance of [Hocon] configured by the [builderAction] [HoconBuilder]. */
 public fun Hocon(builderAction: HoconBuilder.() -> Unit): Hocon {
