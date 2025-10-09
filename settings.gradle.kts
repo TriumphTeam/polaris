@@ -18,6 +18,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 plugins {
     id("dev.triumphteam.root.settings") version "0.0.14"
+    id("org.gradle.toolchains.foojay-resolver-convention").version("1.0.0")
 }
 
 listOf(

@@ -1,21 +1,32 @@
 package dev.triumphteam.polaris.yaml
 
 import dev.triumphteam.polaris.PolarisFormat
+import dev.triumphteam.polaris.loadConfig
+import dev.triumphteam.polaris.yaml.encoding.YamlDecoders
 import dev.triumphteam.polaris.yaml.encoding.YamlConfigEncoder
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.coroutines.delay
 import org.snakeyaml.engine.v2.api.DumpSettings
+import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.StreamDataWriter
 import org.snakeyaml.engine.v2.common.FlowStyle
+import org.snakeyaml.engine.v2.composer.Composer
 import org.snakeyaml.engine.v2.emitter.Emitter
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
+import org.snakeyaml.engine.v2.parser.ParserImpl
 import org.snakeyaml.engine.v2.representer.StandardRepresenter
+import org.snakeyaml.engine.v2.scanner.StreamReader
 import org.snakeyaml.engine.v2.serializer.Serializer
+import java.io.StringReader
 import java.io.StringWriter
+import kotlin.io.path.Path
+import kotlin.time.Duration.Companion.seconds
 
 /** Creates an instance of [Yaml] configured by the [builderAction] [YamlBuilder]. */
 public fun Yaml(builderAction: YamlBuilder.() -> Unit): Yaml {
@@ -66,7 +77,16 @@ public sealed class Yaml(settings: YamlSettings) : PolarisFormat, YamlSettings b
     }
 
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
-        TODO("Not yet implemented")
+        val settings = LoadSettings.builder().build()
+        val reader = StreamReader(settings, StringReader(string))
+        val parser = ParserImpl(settings, reader)
+        val composer = Composer(settings, parser)
+
+        val node = composer.getSingleNode().orElseThrow {
+            IllegalStateException("No YAML document found")
+        }
+
+        return YamlDecoders(this, node).decodeSerializableValue(deserializer)
     }
 
     private class YamlWriter : StringWriter(), StreamDataWriter {
@@ -133,3 +153,39 @@ public class YamlBuilder internal constructor() : YamlSettings {
      */
     override var indentationSize: Int = 4
 }
+
+// Copy pasted from Hocon.kt example
+public suspend fun main() {
+
+    val config = loadConfig<MyConfig> {
+
+        file = Path("test.yaml")
+
+        // Tells the config which format to use, hocon, yaml, etc
+        format = Yaml {
+            encodeDefaults = true
+        }
+
+        // Only writes if the file doesn't exist.
+        // Maybe in the future some sort of migration to update the file.
+        writeDefault { MyConfig("Bob") }
+    }
+
+    // Delegate value to a variable.
+    val myConfig by config
+
+    // Print the [MyConfig].
+    println(myConfig)
+
+    // Delay for 5 seconds to give me time to edit.
+    delay(5.seconds)
+
+    // Reload config object.
+    config.reload()
+
+    // Print [MyConfig] again, notice we did not delegate it again.
+    println(myConfig)
+}
+
+@Serializable
+public data class MyConfig(public val name: String)
