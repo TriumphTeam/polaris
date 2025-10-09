@@ -7,9 +7,9 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueFactory
 import dev.triumphteam.polaris.hocon.Hocon
-import dev.triumphteam.polaris.serialization.encoding.listLike
-import dev.triumphteam.polaris.serialization.encoding.objLike
-import dev.triumphteam.polaris.serialization.encoding.polarisKind
+import dev.triumphteam.polaris.encoding.listLike
+import dev.triumphteam.polaris.encoding.objLike
+import dev.triumphteam.polaris.encoding.polarisKind
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -73,10 +73,6 @@ internal abstract class AbstractHoconDecoder<T>(protected val hocon: Hocon) : Ta
     override fun decodeTaggedEnum(tag: T, enumDescriptor: SerialDescriptor): Int {
         return enumDescriptor.getElementIndexOrThrow(validateAndCast<String>(tag))
     }
-
-    internal fun <E> decodeConfigValue(extractValueAtPath: (Config, String) -> E): E =
-        getValueFromTaggedConfig(currentTag, extractValueAtPath)
-
 }
 
 internal class HoconDecoder(hocon: Hocon, private val config: Config, private val isPolymorphic: Boolean = false) :

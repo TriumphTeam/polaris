@@ -1,4 +1,4 @@
-package dev.triumphteam.polaris.serialization.encoding
+package dev.triumphteam.polaris.encoding
 
 import dev.triumphteam.polaris.annotation.SerialComment
 import kotlinx.serialization.SerializationException

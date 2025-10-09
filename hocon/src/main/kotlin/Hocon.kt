@@ -14,6 +14,7 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.io.path.Path
@@ -132,44 +133,8 @@ public class HoconBuilder internal constructor() : HoconSettings {
     override var explicitNulls: Boolean = false
 
     /**
-     * Specifies whether resulting HOCON should be pretty-printed: formatted and optimized for human readability.
+     * Specifies whether the resulting HOCON should be pretty-printed: formatted and optimized for human readability.
      * `false` by default.
      */
     override var prettyPrint: Boolean = true
 }
-
-public suspend fun main() {
-
-    val config = loadConfig<MyConfig> {
-
-        file = Path("hocon-config.conf")
-
-        // Tells the config which format to use, hocon, yaml, etc
-        format = Hocon {
-            encodeDefaults = true
-            commentStyle = CommentStyle.DOUBLE_SLASH
-        }
-
-        // Only writes if the file doesn't exist.
-        // Maybe in the future some sort of migration to update the file.
-        writeDefault { MyConfig("Bob") }
-    }
-
-    // Delegate value to a variable.
-    val myConfig by config
-
-    // Print the [MyConfig].
-    println(myConfig)
-
-    // Delay for 5 seconds to give me time to edit.
-    delay(5.seconds)
-
-    // Reload config object.
-    config.reload()
-
-    // Print [MyConfig] again, notice we did not delegate it again.
-    println(myConfig)
-}
-
-@Serializable
-public data class MyConfig(public val name: String)

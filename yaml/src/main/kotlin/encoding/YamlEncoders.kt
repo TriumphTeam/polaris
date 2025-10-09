@@ -1,10 +1,10 @@
 package dev.triumphteam.polaris.yaml.encoding
 
-import dev.triumphteam.polaris.serialization.encoding.AbstractPolarisEncoder
-import dev.triumphteam.polaris.serialization.encoding.invalidKeyKindException
-import dev.triumphteam.polaris.serialization.encoding.listLike
-import dev.triumphteam.polaris.serialization.encoding.objLike
-import dev.triumphteam.polaris.serialization.encoding.polarisKind
+import dev.triumphteam.polaris.encoding.AbstractPolarisEncoder
+import dev.triumphteam.polaris.encoding.invalidKeyKindException
+import dev.triumphteam.polaris.encoding.listLike
+import dev.triumphteam.polaris.encoding.objLike
+import dev.triumphteam.polaris.encoding.polarisKind
 import dev.triumphteam.polaris.yaml.Yaml
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind

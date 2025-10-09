@@ -23,7 +23,8 @@ public class ConfigBuilder<T : Any> {
 
     public lateinit var file: Path
     public lateinit var format: PolarisFormat
-    public lateinit var defaults: () -> T
+    private lateinit var defaults: () -> T
+    public var writeDefaults: Boolean = true
 
     public fun writeDefault(block: () -> T) {
         this.defaults = block
@@ -31,7 +32,11 @@ public class ConfigBuilder<T : Any> {
 
     @PublishedApi
     internal fun build(serializer: (SerializersModule) -> KSerializer<T>): Config<T> {
-        return SimpleConfig(file, serializer(format.serializersModule), format, defaults)
+        require(::file.isInitialized) { "A file path must be provided to the config builder, use `file = Path.of(...)`." }
+        require(::format.isInitialized) { "A format must be provided to the config builder, use `format = `." }
+        require(::defaults.isInitialized) { "A default instance provider must be provided to the config builder, use `writeDefault {}`." }
+
+        return SimpleConfig(file, serializer(format.serializersModule), format, defaults, writeDefaults)
     }
 }
 

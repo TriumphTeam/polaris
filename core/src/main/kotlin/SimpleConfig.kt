@@ -8,17 +8,18 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.reflect.KProperty
 
-internal class SimpleConfig<T> internal constructor(
+internal class SimpleConfig<T>(
     private val path: Path,
     private val serializer: KSerializer<T>,
     private val parser: PolarisFormat,
     private val defaults: () -> T,
+    private val writeDefaults: Boolean,
 ) : Config<T> {
 
     private var value = loadConfig()
 
     override fun save(transform: (T) -> T) {
-        writeToPath(transform(value))
+        writeToPath(transform(value).also { value = it })
     }
 
     override fun reload() {
@@ -40,10 +41,14 @@ internal class SimpleConfig<T> internal constructor(
     private fun loadConfig(): T {
         // Write defaults if the file doesn't exist.
         if (path.notExists()) {
-            return writeToPath(defaults())
+            val defaults = defaults()
+            // Write the defaults and return if we should.
+            if (writeDefaults) return writeToPath(defaults())
+            // If we shouldn't just return the defaults.
+            return defaults
         }
 
-        // If it exists we just read it.
+        // If it exists, we just read it.
         return parser.decodeFromString(serializer, path.readText())
     }
 

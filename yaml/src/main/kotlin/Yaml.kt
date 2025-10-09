@@ -177,9 +177,6 @@ public suspend fun main() {
     // Print the [MyConfig].
     println(myConfig)
 
-    // Delay for 5 seconds to give me time to edit.
-    delay(5.seconds)
-
     // Reload config object.
     config.reload()
 

@@ -4,11 +4,11 @@ import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigValueFactory
 import com.typesafe.config.ConfigValueType
 import dev.triumphteam.polaris.hocon.Hocon
-import dev.triumphteam.polaris.serialization.encoding.AbstractPolarisEncoder
-import dev.triumphteam.polaris.serialization.encoding.invalidKeyKindException
-import dev.triumphteam.polaris.serialization.encoding.listLike
-import dev.triumphteam.polaris.serialization.encoding.objLike
-import dev.triumphteam.polaris.serialization.encoding.polarisKind
+import dev.triumphteam.polaris.encoding.AbstractPolarisEncoder
+import dev.triumphteam.polaris.encoding.invalidKeyKindException
+import dev.triumphteam.polaris.encoding.listLike
+import dev.triumphteam.polaris.encoding.objLike
+import dev.triumphteam.polaris.encoding.polarisKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeEncoder
