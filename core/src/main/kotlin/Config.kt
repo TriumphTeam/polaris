@@ -26,7 +26,7 @@ public class ConfigBuilder<T : Any> {
     private lateinit var defaults: () -> T
     public var writeDefaults: Boolean = true
 
-    public fun writeDefault(block: () -> T) {
+    public fun defaultInstance(block: () -> T) {
         this.defaults = block
     }
 
