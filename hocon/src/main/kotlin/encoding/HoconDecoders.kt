@@ -82,9 +82,7 @@ internal class HoconDecoder(hocon: Hocon, private val config: Config, private va
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         while (++index < descriptor.elementsCount) {
             val name = descriptor.getTag(index)
-            if (config.hasPathOrNull(name)) {
-                return index
-            }
+            if (config.hasPathOrNull(name)) return index
         }
         return DECODE_DONE
     }

@@ -9,18 +9,15 @@ import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import org.snakeyaml.engine.v2.api.DumpSettings
+import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.StreamDataWriter
 import org.snakeyaml.engine.v2.common.FlowStyle
-import org.snakeyaml.engine.v2.composer.Composer
 import org.snakeyaml.engine.v2.emitter.Emitter
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
-import org.snakeyaml.engine.v2.parser.ParserImpl
 import org.snakeyaml.engine.v2.representer.StandardRepresenter
-import org.snakeyaml.engine.v2.scanner.StreamReader
 import org.snakeyaml.engine.v2.serializer.Serializer
-import java.io.StringReader
 import java.io.StringWriter
 
 /** Creates an instance of [Yaml] configured by the [builderAction] [YamlBuilder]. */
@@ -73,15 +70,13 @@ public sealed class Yaml(settings: YamlSettings) : PolarisFormat, YamlSettings b
 
     override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T {
         val settings = LoadSettings.builder().build()
-        val reader = StreamReader(settings, StringReader(string))
-        val parser = ParserImpl(settings, reader)
-        val composer = Composer(settings, parser)
+        val load = Load(settings)
 
-        val node = composer.singleNode.orElseThrow {
-            IllegalStateException("Could not parse the input as a Yaml document.")
-        }
+        @Suppress("UNCHECKED_CAST")
+        val data = load.loadFromString(string) as? Map<String, *>
+            ?: throw SerializationException("Could not parse the input as a Yaml document.")
 
-        return YamlDecoder(this, node).decodeSerializableValue(deserializer)
+        return YamlDecoder(this, data).decodeSerializableValue(deserializer)
     }
 
     private class YamlWriter : StringWriter(), StreamDataWriter {
